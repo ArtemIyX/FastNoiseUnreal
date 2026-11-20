@@ -1,0 +1,37 @@
+{
+    "FileVersion": 3,
+    "Version": 1,
+    "VersionName": "1.1.1",
+    "FriendlyName": "FastNoise",
+    "Description": "Source-built FastNoise2 runtime for Unreal Engine.",
+    "Category": "Other",
+    "CreatedBy": "DoubleDeez",
+    "CreatedByURL": "http://github.com/DoubleDeez",
+    "DocsURL": "",
+    "MarketplaceURL": "",
+    "SupportURL": "",
+    "CanContainContent": false,
+    "IsBetaVersion": false,
+    "IsExperimentalVersion": false,
+    "Installed": false,
+    "Modules": [
+        {
+            "Name": "FastNoiseVendor",
+            "Type": "Runtime",
+            "LoadingPhase": "Default",
+            "PlatformAllowList": [
+                "Win64",
+                "Linux"
+            ]
+        },
+        {
+            "Name": "FastNoiseRuntime",
+            "Type": "Runtime",
+            "LoadingPhase": "Default",
+            "PlatformAllowList": [
+                "Win64",
+                "Linux"
+            ]
+        }
+    ]
+}
