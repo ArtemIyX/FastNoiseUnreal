@@ -64,28 +64,28 @@ FFastNoiseNative::~FFastNoiseNative()
 		fnDeleteNodeRef(Source);
 	}
 }
-TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreatePerlin(FString& Error)
+TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreatePerlin(FString& Error, bool bUnitScale)
 {
-	return Create(false, 1, 0.f, 1.f, TEXT("perlin"), nullptr, Error);
+	return Create(false, 1, 0.f, 1.f, TEXT("perlin"), nullptr, Error, bUnitScale);
 }
-TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreateValue(FString& Error)
+TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreateValue(FString& Error, bool bUnitScale)
 {
-	return Create(false, 1, 0.f, 1.f, TEXT("value"), nullptr, Error);
+	return Create(false, 1, 0.f, 1.f, TEXT("value"), nullptr, Error, bUnitScale);
 }
-TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreateSimplex(FString& Error)
+TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreateSimplex(FString& Error, bool bUnitScale)
 {
-	return Create(false, 1, 0.f, 1.f, TEXT("simplex"), nullptr, Error);
+	return Create(false, 1, 0.f, 1.f, TEXT("simplex"), nullptr, Error, bUnitScale);
 }
-TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreateFbm(int32 Octaves, float Gain, float Lacunarity, FString& Error)
+TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreateFbm(int32 Octaves, float Gain, float Lacunarity, FString& Error, bool bUnitScale)
 {
-	return Create(true, Octaves, Gain, Lacunarity, TEXT("perlin"), nullptr, Error);
+	return Create(true, Octaves, Gain, Lacunarity, TEXT("perlin"), nullptr, Error, bUnitScale);
 }
 TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreateEncoded(const FString& Encoded, FString& Error)
 {
-	return Create(false, 1, 0.f, 1.f, nullptr, &Encoded, Error);
+	return Create(false, 1, 0.f, 1.f, nullptr, &Encoded, Error, false);
 }
 TUniquePtr<FFastNoiseNative> FFastNoiseNative::Create(
-	bool bFbm, int32 Octaves, float Gain, float Lacunarity, const TCHAR* SourceName, const FString* Encoded, FString& Error)
+	bool bFbm, int32 Octaves, float Gain, float Lacunarity, const TCHAR* SourceName, const FString* Encoded, FString& Error, bool bUnitScale)
 {
 	Error.Reset();
 	if (bFbm
@@ -127,6 +127,15 @@ TUniquePtr<FFastNoiseNative> FFastNoiseNative::Create(
 			if (SourceId != INDEX_NONE)
 			{
 				Result->Source = fnNewFromMetadata(SourceId, Level);
+			}
+			if (Result->Source && bUnitScale)
+			{
+				const int32 Scale = FindField(SourceId, fnGetMetadataVariableCount(SourceId),
+					TEXT("featurescale"), fnGetMetadataVariableName);
+				if (Scale == INDEX_NONE || !fnSetVariableFloat(Result->Source, Scale, 1.f))
+				{
+					Error = TEXT("BackendUnavailable: cannot configure unit source scale");
+				}
 			}
 			if (!bFbm)
 			{
