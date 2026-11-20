@@ -1,8 +1,6 @@
 <div align="center">
 
-<!-- Replace the path below with a banner when one is available.
-<img src="Resources/FastNoiseBanner.png" alt="FastNoise for Unreal Engine" width="100%">
--->
+<img width="1280" height="640" alt="Header" src="https://github.com/user-attachments/assets/4afe3fc9-2f67-4dbf-a468-78e16dd3a8c9" />
 
 # FastNoise for Unreal Engine
 
