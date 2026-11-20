@@ -11,6 +11,8 @@ public:
 	FFastNoiseNative& operator=(const FFastNoiseNative&) = delete;
 
 	static TUniquePtr<FFastNoiseNative> CreatePerlin(FString& OutError);
+	static TUniquePtr<FFastNoiseNative> CreateValue(FString& OutError);
+	static TUniquePtr<FFastNoiseNative> CreateSimplex(FString& OutError);
 	static TUniquePtr<FFastNoiseNative> CreateFbm(int32 Octaves, float Gain, float Lacunarity, FString& OutError);
 	static TUniquePtr<FFastNoiseNative> CreateEncoded(const FString& Encoded, FString& OutError);
 	bool Sample2D(int32 Count, const float* X, const float* Y, int32 Seed, float* Output, FString& OutError) const;
@@ -20,7 +22,7 @@ public:
 private:
 	FFastNoiseNative() = default;
 	static TUniquePtr<FFastNoiseNative> Create(
-		bool bFbm, int32 Octaves, float Gain, float Lacunarity, const FString* Encoded, FString& OutError);
+		bool bFbm, int32 Octaves, float Gain, float Lacunarity, const TCHAR* SourceName, const FString* Encoded, FString& OutError);
 	void* Root = nullptr;
 	void* Source = nullptr;
 	uint32 OwnerThread = 0;

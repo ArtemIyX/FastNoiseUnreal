@@ -12,27 +12,41 @@ FString Normalize(const char* Name)
 {
 	FString Result;
 	if (Name)
+	{
 		for (const char* C = Name; *C; ++C)
 		{
 			if (*C >= 'A' && *C <= 'Z')
+			{
 				Result.AppendChar(TCHAR(*C + ('a' - 'A')));
+			}
 			else if ((*C >= 'a' && *C <= 'z') || (*C >= '0' && *C <= '9'))
+			{
 				Result.AppendChar(TCHAR(*C));
+			}
 		}
+	}
 	return Result;
 }
 int32 FindNode(const TCHAR* Name)
 {
 	for (int32 Index = 0; Index < fnGetMetadataCount(); ++Index)
+	{
 		if (Normalize(fnGetMetadataName(Index)) == Name)
+		{
 			return Index;
+		}
+	}
 	return INDEX_NONE;
 }
 int32 FindField(int32 Id, int32 Count, const TCHAR* Name, const char* (*GetName)(int, int))
 {
 	for (int32 Index = 0; Index < Count; ++Index)
+	{
 		if (Normalize(GetName(Id, Index)) == Name)
+		{
 			return Index;
+		}
+	}
 	return INDEX_NONE;
 }
 }
@@ -42,24 +56,36 @@ FFastNoiseNative::~FFastNoiseNative()
 	check(OwnerThread == FPlatformTLS::GetCurrentThreadId());
 	FScopeLock Lock(&NodeMutex);
 	if (Root)
+	{
 		fnDeleteNodeRef(Root);
+	}
 	if (Source)
+	{
 		fnDeleteNodeRef(Source);
+	}
 }
 TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreatePerlin(FString& Error)
 {
-	return Create(false, 1, 0.f, 1.f, nullptr, Error);
+	return Create(false, 1, 0.f, 1.f, TEXT("perlin"), nullptr, Error);
+}
+TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreateValue(FString& Error)
+{
+	return Create(false, 1, 0.f, 1.f, TEXT("value"), nullptr, Error);
+}
+TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreateSimplex(FString& Error)
+{
+	return Create(false, 1, 0.f, 1.f, TEXT("simplex"), nullptr, Error);
 }
 TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreateFbm(int32 Octaves, float Gain, float Lacunarity, FString& Error)
 {
-	return Create(true, Octaves, Gain, Lacunarity, nullptr, Error);
+	return Create(true, Octaves, Gain, Lacunarity, TEXT("perlin"), nullptr, Error);
 }
 TUniquePtr<FFastNoiseNative> FFastNoiseNative::CreateEncoded(const FString& Encoded, FString& Error)
 {
-	return Create(false, 1, 0.f, 1.f, &Encoded, Error);
+	return Create(false, 1, 0.f, 1.f, nullptr, &Encoded, Error);
 }
 TUniquePtr<FFastNoiseNative> FFastNoiseNative::Create(
-	bool bFbm, int32 Octaves, float Gain, float Lacunarity, const FString* Encoded, FString& Error)
+	bool bFbm, int32 Octaves, float Gain, float Lacunarity, const TCHAR* SourceName, const FString* Encoded, FString& Error)
 {
 	Error.Reset();
 	if (bFbm
@@ -91,13 +117,17 @@ TUniquePtr<FFastNoiseNative> FFastNoiseNative::Create(
 		if (Encoded)
 		{
 			if (!Encoded->IsEmpty())
+			{
 				Result->Root = fnNewFromEncodedNodeTree(TCHAR_TO_UTF8(**Encoded), Level);
+			}
 		}
 		else
 		{
-			const int32 PerlinId = FindNode(TEXT("perlin"));
-			if (PerlinId != INDEX_NONE)
-				Result->Source = fnNewFromMetadata(PerlinId, Level);
+			const int32 SourceId = FindNode(SourceName);
+			if (SourceId != INDEX_NONE)
+			{
+				Result->Source = fnNewFromMetadata(SourceId, Level);
+			}
 			if (!bFbm)
 			{
 				Result->Root = Result->Source;
@@ -107,7 +137,9 @@ TUniquePtr<FFastNoiseNative> FFastNoiseNative::Create(
 			{
 				const int32 FbmId = FindNode(TEXT("fractalfbm"));
 				if (FbmId != INDEX_NONE)
+				{
 					Result->Root = fnNewFromMetadata(FbmId, Level);
+				}
 				if (Result->Root)
 				{
 					const int32 SourceIndex = FindField(
@@ -123,15 +155,21 @@ TUniquePtr<FFastNoiseNative> FFastNoiseNative::Create(
 						|| !fnSetVariableIntEnum(Result->Root, Octave, Octaves)
 						|| !fnSetHybridFloat(Result->Root, GainIndex, Gain)
 						|| !fnSetVariableFloat(Result->Root, Lac, Lacunarity))
+					{
 						Error = TEXT("BackendUnavailable: could not configure fBm");
+					}
 				}
 			}
 		}
 		if (!Result->Root || fnGetActiveFeatureSet(Result->Root) != Level)
+		{
 			Error = TEXT("BackendUnavailable: could not create requested SSE2 node");
+		}
 	}
 	if (!Error.IsEmpty())
+	{
 		return nullptr;
+	}
 	return Result;
 }
 bool FFastNoiseNative::Sample2D(
@@ -144,20 +182,26 @@ bool FFastNoiseNative::Sample2D(
 		return false;
 	}
 	for (int32 Index = 0; Index < Count; ++Index)
+	{
 		if (!FMath::IsFinite(X[Index]) || !FMath::IsFinite(Y[Index]) || FMath::Abs(double(X[Index])) > MaximumPosition
 			|| FMath::Abs(double(Y[Index])) > MaximumPosition)
 		{
 			Error = TEXT("InvalidNoiseInput: position exceeds safe lattice domain");
 			return false;
 		}
+	}
 	if (Count)
+	{
 		fnGenPositionArray2D(Root, Output, Count, X, Y, 0.f, 0.f, Seed, nullptr);
+	}
 	for (int32 Index = 0; Index < Count; ++Index)
+	{
 		if (!FMath::IsFinite(Output[Index]))
 		{
 			Error = TEXT("InvalidNoiseInput: non-finite result");
 			return false;
 		}
+	}
 	return true;
 }
 bool FFastNoiseNative::Sample3D(
@@ -170,6 +214,7 @@ bool FFastNoiseNative::Sample3D(
 		return false;
 	}
 	for (int32 Index = 0; Index < Count; ++Index)
+	{
 		if (!FMath::IsFinite(X[Index]) || !FMath::IsFinite(Y[Index]) || !FMath::IsFinite(Z[Index])
 			|| FMath::Abs(double(X[Index])) > MaximumPosition || FMath::Abs(double(Y[Index])) > MaximumPosition
 			|| FMath::Abs(double(Z[Index])) > MaximumPosition)
@@ -177,13 +222,18 @@ bool FFastNoiseNative::Sample3D(
 			Error = TEXT("InvalidNoiseInput: position exceeds safe lattice domain");
 			return false;
 		}
+	}
 	if (Count)
+	{
 		fnGenPositionArray3D(Root, Output, Count, X, Y, Z, 0.f, 0.f, 0.f, Seed, nullptr);
+	}
 	for (int32 Index = 0; Index < Count; ++Index)
+	{
 		if (!FMath::IsFinite(Output[Index]))
 		{
 			Error = TEXT("InvalidNoiseInput: non-finite result");
 			return false;
 		}
+	}
 	return true;
 }
