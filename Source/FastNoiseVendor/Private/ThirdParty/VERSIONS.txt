@@ -1,0 +1,3 @@
+FastNoise2 c35d6041ce7efc05bc84e26d762f6a38d2dcc71e
+FastSIMD f7e9ce6fca475731c0a3c115ec29dcfd36886b2a
+Integration patch: FastNoise_C.h includes CoreTypes.h and exports the C facade using FASTNOISEVENDOR_API across Unreal modules.
